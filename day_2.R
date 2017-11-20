@@ -29,35 +29,47 @@ X
 X[5]
 X[4:10]
 X[length(X)]
+X[length(X)-1]
 X[-2]
 X>2
 (X <= 10)|(X>=30)
 X[X<10 | X>30]
 
+idx <- c(1,4,6)
+X[idx]
+X[-idx]
+
 X2 <- numeric(length(X))
-X2[X<=30] <- 1
 X2
+X2[X<=30] <- 1
+X2[(X>30)&(X<70)] <- 2
 X2[X>70] <- 3
+X2
 
 install.packages("car")
 library(car)
-X2 <- recode(X, "0:30=1")
+X2 <- recode(X, "0:30=1;30:70=2;else=3")
 X2
+
 summary(X)
 sum(X)
 cumsum(X)
-rev(X)
-sort(X, decreasing=TRUE)
-sample(X,10)
+
+rev(X) #revert order
+sort(X, decreasing=TRUE) #same
+sample(X,10) #sample 10 values out of X
 
 test <- data.frame(A=c(1,2,3),B=c("aB1","aB2","aB3"))
 test
-test[,1]
-test[,"A"]
-test$A
-test$B
+test[,1] # first col
+test[,"A"] #first col, referred to as A
+test$A #same
+test$B #second col
+
 df_1 <- data.frame(plot="location_name_1", measure1=runif(100)*1000, measure2=round(runif(100)*100),value=rnorm(100,2,1),ID=rep(LETTERS,100))
+df_1
 df_2 <- data.frame(plot="location_name_2",measure1=runif(50)*100, measure2=round(runif(50)*10),value=rnorm(50),ID=rep(LETTERS,50))
+df_2 
 df <- rbind(df_1,df_2)
 df
 q <- length(df[,1])
