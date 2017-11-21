@@ -147,8 +147,10 @@ install.packages("raster")
 install.packages("sp")
 r1 <- raster(nrows=10, ncol=10)
 r1
-r1[] <- rnorm(100)
+r1[] <- rnorm(100) #100 random values
 plot(r1)
+
+r1$band_2 #add a second col
 
 library(sp)
 poi1 <- cbind(c(rnorm(10)),c(rnorm(10))) #create 10 random coordinate pairs
