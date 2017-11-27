@@ -262,3 +262,197 @@ slot(islands_sp, "plotOrder")
 
 order(sapply(slot(islands_sp, "polygons"), function(x) slot(x,"area")), decreasing = TRUE)
 
+#SpatialPolygonsDataFrame
+#p.45
+
+library(maps)
+state.map <- map("state", plot = F, fill = T)
+state.map #additional
+plot(state.map) #additional
+state.map$names #additional
+IDs <- sapply(strsplit(state.map$names, ":"), function(x) x[1])
+IDs  #additional
+
+library(maptools)
+state.sp <- map2SpatialPolygons(state.map, IDs = IDs,
+proj4string = CRS("+proj=longlat +ellps=WGS84"))
+
+state.sp
+plot(state.sp) #additional but important
+
+sat <- read.table(file.choose(), row.names = 5, #"state.sat.data_mod.txt" 49 entries
+header = TRUE)
+str(sat)
+plot(sat) #additional
+names(sat)# additional: show the for variables of sat
+
+id <- match(row.names(sat), row.names(state.sp))
+id #additional
+str(id) #additional
+row.names(sat)[is.na(id)] #in state there is also data on alaska, hawaii and usa as a whole, which is not included in sat
+
+sat1 <- sat[!is.na(id), ] #all values which have an id 
+sat1 #additional
+str(sat1) #additional
+
+state.spdf <- SpatialPolygonsDataFrame(state.sp, sat1)
+str(state.spdf) #additional
+str(slot(state.spdf, "data"))
+str(state.spdf, max.level = 2)
+
+#p.46
+
+sat1[2] #additional: [2] equals vscore
+rownames #add. rownames is a function
+rownames(sat1) #add.
+rownames(sat1)[2] #add. result "arizona"
+rownames(sat1)[2] <- "Arizona"
+rownames(sat1)[2]#add. "arizona" was replaced by "Arizona"
+SpatialPolygonsDataFrame(state.sp, sat1) #error message is wanted by book, as to the above change there is no match anymore
+
+DC <- "district of columbia"
+not_dc <- !(row.names(state.spdf) == DC) #easy
+not_dc #add.
+state.spdf1 <- state.spdf[not_dc, ] #new sdpf without dc
+state.spdf1 #add.
+dim(state.spdf1) #result 48 4: means there are 48 features and 4 variables
+names(state.spdf1) #add.
+str(state.spdf1) #add. and long
+
+summary(state.spdf1)
+
+#Holes and Ring direction
+#p.47
+
+load(file.choose())
+View(high)
+manitoulin_sp <- high[[4]] #all not as given in the book
+
+manitoulin_sp #add.
+plot(manitoulin_sp) #add.
+str(manitoulin_sp)
+
+length(slot(manitoulin_sp, "polygons"))
+
+sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), #what 
+function(x) slot(x, "hole"))
+
+sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), #what
+function(x) slot(x, "ringDir"))
+
+#p.48
+
+library(rgeos)
+manitoulin_sp <- createSPComment(manitoulin_sp)
+sapply(slot(manitoulin_sp, "polygons"), comment)
+
+#SpatialGrid and SpatialPixel Objects
+#p.49
+
+getClass("GridTopology")
+
+bb <- bbox(manitoulin_sp)
+bb
+
+cs <- c(0.01, 0.01)
+cc <- bb[, 1] + (cs/2)
+cd <- ceiling(diff(t(bb))/cs)
+cd #add.
+manitoulin_grd <- GridTopology(cellcentre.offset = cc,
+cellsize = cs, cells.dim = cd)
+manitoulin_grd 
+
+getClass("SpatialGrid")
+
+#p.50
+
+p4s <- CRS(proj4string(manitoulin_sp))
+manitoulin_SG <- SpatialGrid(manitoulin_grd, proj4string = p4s)
+summary(manitoulin_SG)
+
+
+raster1 <- raster(file.choose())
+auck_el1 <- as(raster1,"SpatialGridDataFrame") #not as its supposed to be in the book
+auck_el1#add.
+
+class(auck_el1)
+slot(auck_el1, "grid")
+
+#p.51
+library(raster)
+slot(auck_el1, "bbox")
+object.size(auck_el1)
+object.size(slot(auck_el1, "data"))
+
+names(auck_el1)# Very important, as name is not band1 but X70042108
+auck_el1$X70042108 #shit aint real
+
+is.na(auck_el1$X70042108) <- auck_el1$X70042108<= 0
+ 
+
+auck_el2 <- as(auck_el1, "SpatialPixelsDataFrame")
+object.size(auck_el2)
+
+object.size(slot(auck_el2, "grid.index"))
+
+object.size(slot(auck_el2, "coords"))
+sum(is.na(auck_el1$X70042108)) + nrow(slot(auck_el2, "coords"))
+
+#p.52
+prod(slot(slot(auck_el2, "grid"), "cells.dim"))
+
+auck_el_500 <- auck_el2[auck_el2$X70042108 > 500, ]
+summary(auck_el_500)
+
+#p.53
+
+object.size(auck_el_500)
+
+data(meuse.grid)
+mg_SP <- SpatialPoints(cbind(meuse.grid$x, meuse.grid$y))
+summary(mg_SP)
+
+mg_SPix0 <- SpatialPixels(mg_SP)
+summary(mg_SPix0)
+
+prod(slot(slot(mg_SPix0, "grid"), "cells.dim"))
+
+#p.54
+
+mg_SPix1 <- as(mg_SP, "SpatialPixels")
+summary(mg_SPix1)
+
+#Raster Objects and the raster Package
+
+library(raster)
+r<- raster(file.choose())
+class(r)
+inMemory(r)
+object.size(r)
+
+#p.55
+cellStats(r, max)
+cellStats(r, min)
+inMemory(r)
+
+out <- raster(r)
+bs <- blockSize(out)
+out <- writeStart(out, filename = tempfile(), overwrite = TRUE)
+for (i in 1:bs$n) {
+v <- getValues(r, row = bs$row[i], nrows = bs$nrows[i])
+v[v <= 0] <- NA
+writeValues(out, v, bs$row[i])}
+out <- writeStop(out)
+
+cellStats(out, min)
+cellStats(out, max)
+inMemory(out)
+
+plot(out, col = terrain.colors(100))
+
+r1 <- as(out, "SpatialGridDataFrame")
+summary(r1)
+
+#p.56
+r2 <- as(r1, "RasterLayer")
+summary(r2)
