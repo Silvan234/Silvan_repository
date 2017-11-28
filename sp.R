@@ -193,7 +193,7 @@ install.packages("maptools")
 library(maps)
 library(maptools)
 
-japan <- map("world", "japan", plot = FALSE) #alternatively: set plot to T and get map of japan
+japan <- map("world", "japan", plot = F) #alternatively: set plot to T and get map of japan
 p4s <- CRS("+proj=longlat +ellps=WGS84")
 
 SLjapan <- map2SpatialLines(japan, proj4string = p4s)
